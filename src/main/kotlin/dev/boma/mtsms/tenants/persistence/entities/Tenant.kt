@@ -3,6 +3,7 @@ package dev.boma.mtsms.tenants.persistence.entities
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import dev.boma.mtsms.persistence.base.UUIDAsPkEntity
+import dev.boma.mtsms.validation.OnCreate
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -26,7 +27,7 @@ class Tenant : UUIDAsPkEntity() {
     @Column(name = "name", length = 1000, nullable = false)
     @JsonProperty
     @Length(message = "Tenant name shouldn't exceed 1000 characters", max = 1000)
-    @NotBlank(message = "Tenant name is required and shouldn't be blank")
+    @NotBlank(message = "Tenant name is required and shouldn't be blank", groups = [OnCreate::class])
     var name: String? = null
 
     @OneToMany(mappedBy = "tenant", cascade = [CascadeType.ALL], orphanRemoval = true)

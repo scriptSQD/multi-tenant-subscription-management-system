@@ -1,4 +1,4 @@
-package dev.boma.mtsms.controllers
+package dev.boma.mtsms.e2e
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.boma.mtsms.DatabaseEnabledTest
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-class TenantsControllerTests @Autowired constructor(
+class TenantsTests @Autowired constructor(
     private val mockMvc: MockMvc,
     private val objectMapper: ObjectMapper,
 ) : DatabaseEnabledTest() {
@@ -93,7 +93,7 @@ class TenantsControllerTests @Autowired constructor(
     }
 
     @Nested
-    @DisplayName("Get tenant by id")
+    @DisplayName("Tenant retrieval")
     inner class GetTenantById {
 
         private lateinit var tenant: Tenant
@@ -112,6 +112,18 @@ class TenantsControllerTests @Autowired constructor(
                 })
             }.andReturn().also {
                 tenant = objectMapper.readValue(it.response.contentAsString, Tenant::class.java)
+            }
+        }
+
+        @Test
+        @DisplayName("should return 400 bad request for invalid uuid in path")
+        fun invalidUuid() {
+            mockMvc.get("/tenants/invalid-uuid") {
+                with(jwt().jwt {
+                    it.claim("sub", tenantOwnerSub)
+                })
+            }.andExpect {
+                status { isBadRequest() }
             }
         }
 
