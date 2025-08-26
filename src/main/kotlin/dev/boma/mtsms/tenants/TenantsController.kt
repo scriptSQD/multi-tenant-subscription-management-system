@@ -24,7 +24,7 @@ class TenantsController @Autowired constructor(val tenantsService: TenantsServic
         return tenantsService.getById(id).orElseThrow {
             HttpStatusException(
                 HttpStatus.NOT_FOUND,
-                "Tenant with id $id not found"
+                "Tenant with id $id doesn't exist or you lack permissions to access it"
             )
         }
     }

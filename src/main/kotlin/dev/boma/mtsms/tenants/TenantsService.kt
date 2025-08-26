@@ -1,5 +1,6 @@
 package dev.boma.mtsms.tenants
 
+import dev.boma.mtsms.shared.getJwtFromContext
 import dev.boma.mtsms.tenants.persistence.entities.Tenant
 import dev.boma.mtsms.tenants.persistence.repositories.TenantsRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,7 +14,8 @@ class TenantsService @Autowired internal constructor(
 ) {
 
     fun getById(id: UUID): Optional<Tenant> {
-        return tenantsRepository.getById(id)
+        val jwt = getJwtFromContext()
+        return tenantsRepository.getByIdWithAccessControl(id, jwt.subject)
     }
 
     fun create(tenant: Tenant): Tenant {

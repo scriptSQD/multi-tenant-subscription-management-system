@@ -16,8 +16,8 @@ internal class TenantsRepository @Autowired constructor(
 ) {
 
     @Transactional(readOnly = true)
-    fun getById(id: UUID): Optional<Tenant> {
-        return repository.findById(id)
+    fun getByIdWithAccessControl(id: UUID, userSub: String): Optional<Tenant> {
+        return repository.findByIdAndRelatedUser(id, userSub)
     }
 
     @Transactional
