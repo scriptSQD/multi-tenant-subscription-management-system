@@ -16,4 +16,14 @@ internal interface TenantsJpaRepository : JpaRepository<Tenant, UUID> {
         """
     )
     fun findByIdAndRelatedUser(id: UUID, relatedUserSub: String): Optional<Tenant>
+
+    @Query(
+        """
+        SELECT t
+        FROM Tenant t
+        INNER JOIN TenantUser tu ON tu.tenantId = t.id
+        WHERE tu.userSub = ?1
+        """
+    )
+    fun findAllByRelatedUser(relatedUserSub: String): Set<Tenant>
 }

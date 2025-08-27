@@ -16,6 +16,11 @@ internal class TenantsRepository @Autowired constructor(
 ) {
 
     @Transactional(readOnly = true)
+    fun getAllWithAccessControl(userSub: String): Set<Tenant> {
+        return repository.findAllByRelatedUser(userSub)
+    }
+
+    @Transactional(readOnly = true)
     fun getByIdWithAccessControl(id: UUID, userSub: String): Optional<Tenant> {
         return repository.findByIdAndRelatedUser(id, userSub)
     }
@@ -38,6 +43,13 @@ internal class TenantsRepository @Autowired constructor(
                 userSub = jwt.subject
             )
         )
+
+        return repository.saveAndFlush(tenant)
+    }
+
+    @Transactional
+    fun update(tenant: Tenant, update: Tenant): Tenant {
+        update.name?.let { tenant.name = it }
 
         return repository.saveAndFlush(tenant)
     }

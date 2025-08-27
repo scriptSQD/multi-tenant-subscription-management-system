@@ -1,4 +1,4 @@
-package dev.boma.mtsms.shared
+package dev.boma.mtsms.serialization
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.io.Serializable

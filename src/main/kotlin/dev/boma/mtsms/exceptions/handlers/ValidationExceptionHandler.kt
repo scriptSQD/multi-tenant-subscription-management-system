@@ -1,6 +1,6 @@
-package dev.boma.mtsms.configuration
+package dev.boma.mtsms.exceptions.handlers
 
-import dev.boma.mtsms.shared.ApiResponse
+import dev.boma.mtsms.serialization.ApiResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -12,7 +12,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 class ValidationExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleValidationException(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse> {
+    fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse> {
         val errors = e.bindingResult.fieldErrors.associate {
             it.field to (it.defaultMessage ?: "Invalid value")
         }
@@ -29,7 +29,7 @@ class ValidationExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException::class)
-    fun handleTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ApiResponse> {
+    fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ApiResponse> {
         return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
             .body(

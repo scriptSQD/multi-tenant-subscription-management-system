@@ -2,6 +2,8 @@ package dev.boma.mtsms.tenants.persistence.entities
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonView
+import dev.boma.mtsms.serialization.views.Views
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -19,15 +21,7 @@ import java.io.Serializable
 import java.util.*
 
 @Entity
-@Table(
-    name = "tenant_users",
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uq_tenant_users__tenant_id_user_sub",
-            columnNames = ["tenant_id", "user_sub"]
-        )
-    ],
-)
+@Table(name = "tenant_users")
 @IdClass(TenantUser.PrimaryKey::class)
 class TenantUser {
 
@@ -40,6 +34,7 @@ class TenantUser {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(name = "user_sub", nullable = false)
     @JsonProperty
+    @JsonView(Views.Thin::class)
     var userSub: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])

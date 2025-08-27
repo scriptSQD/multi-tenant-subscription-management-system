@@ -1,14 +1,14 @@
-package dev.boma.mtsms.configuration
+package dev.boma.mtsms.exceptions.handlers
 
-import dev.boma.mtsms.shared.ApiResponse
-import dev.boma.mtsms.shared.HttpStatusException
+import dev.boma.mtsms.serialization.ApiResponse
+import dev.boma.mtsms.exceptions.http.HttpStatusException
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
-class HttpStatusExceptionHandler {
+class HttpExceptionsHandler {
 
     @ExceptionHandler(HttpStatusException::class)
     fun handleHttpStatusException(e: HttpStatusException): ResponseEntity<ApiResponse> {

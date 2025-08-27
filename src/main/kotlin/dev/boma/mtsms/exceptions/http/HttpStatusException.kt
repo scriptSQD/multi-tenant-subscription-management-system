@@ -1,4 +1,4 @@
-package dev.boma.mtsms.shared
+package dev.boma.mtsms.exceptions.http
 
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
