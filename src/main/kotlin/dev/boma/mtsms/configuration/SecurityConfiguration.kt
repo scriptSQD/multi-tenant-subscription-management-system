@@ -10,21 +10,20 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableMethodSecurity
 class SecurityConfiguration {
 
-    @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        http
-            .authorizeHttpRequests {
-                it
-                    .requestMatchers("/health", "/actuator/**", "/swagger-ui*/**", "/v3/api-docs/**")
-                    .permitAll()
+	@Bean
+	fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+		http
+			.authorizeHttpRequests {
+				it
+					.requestMatchers("/health", "/actuator/**", "/swagger-ui*/**", "/v3/api-docs/**")
+					.permitAll()
+					.anyRequest()
+					.authenticated()
+			}
+			.oauth2ResourceServer { it.jwt {} }
+			.anonymous { it.disable() }
+			.csrf { it.disable() }
 
-                    .anyRequest()
-                    .authenticated()
-            }
-            .oauth2ResourceServer { it.jwt {} }
-            .anonymous { it.disable() }
-            .csrf { it.disable() }
-
-        return http.build()
-    }
+		return http.build()
+	}
 }

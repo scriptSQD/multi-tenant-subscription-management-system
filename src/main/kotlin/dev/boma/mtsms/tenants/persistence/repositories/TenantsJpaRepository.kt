@@ -7,23 +7,23 @@ import java.util.*
 
 internal interface TenantsJpaRepository : JpaRepository<Tenant, UUID> {
 
-    @Query(
-        """
+	@Query(
+		"""
         SELECT t, tu
         FROM Tenant t
         INNER JOIN TenantUser tu ON tu.tenantId = t.id
         WHERE t.id = ?1 AND tu.userSub = ?2
-        """
-    )
-    fun findByIdAndRelatedUser(id: UUID, relatedUserSub: String): Optional<Tenant>
+        """,
+	)
+	fun findByIdAndRelatedUser(id: UUID, relatedUserSub: String): Optional<Tenant>
 
-    @Query(
-        """
+	@Query(
+		"""
         SELECT t
         FROM Tenant t
         INNER JOIN TenantUser tu ON tu.tenantId = t.id
         WHERE tu.userSub = ?1
-        """
-    )
-    fun findAllByRelatedUser(relatedUserSub: String): Set<Tenant>
+        """,
+	)
+	fun findAllByRelatedUser(relatedUserSub: String): Set<Tenant>
 }

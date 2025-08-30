@@ -11,16 +11,16 @@ import java.util.UUID
 
 private class UUIDv7Generator : BeforeExecutionGenerator {
 
-    override fun generate(
-        session: SharedSessionContractImplementor?,
-        owner: Any?,
-        currentValue: Any?,
-        eventType: EventType?
-    ): UUID {
-        return UuidCreator.getTimeOrderedEpoch()
-    }
+	override fun generate(
+		session: SharedSessionContractImplementor?,
+		owner: Any?,
+		currentValue: Any?,
+		eventType: EventType?,
+	): UUID {
+		return UuidCreator.getTimeOrderedEpoch()
+	}
 
-    override fun getEventTypes(): EnumSet<EventType?> = EventTypeSets.INSERT_ONLY
+	override fun getEventTypes(): EnumSet<EventType?> = EventTypeSets.INSERT_ONLY
 }
 
 @IdGeneratorType(UUIDv7Generator::class)

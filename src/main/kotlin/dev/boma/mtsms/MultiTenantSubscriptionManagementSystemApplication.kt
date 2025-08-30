@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class MultiTenantSubscriptionManagementSystemApplication
 
 fun main(args: Array<String>) {
-    runApplication<MultiTenantSubscriptionManagementSystemApplication>(*args)
+	runApplication<MultiTenantSubscriptionManagementSystemApplication>(*args)
 }

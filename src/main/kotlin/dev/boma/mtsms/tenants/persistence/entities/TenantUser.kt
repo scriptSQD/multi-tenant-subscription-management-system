@@ -24,42 +24,43 @@ import java.util.*
 @IdClass(TenantUser.PrimaryKey::class)
 class TenantUser {
 
-    @Id
-    @Column(name = "tenant_id", nullable = false)
-    @JsonIgnore
-    var tenantId: UUID? = null
+	@Id
+	@Column(name = "tenant_id", nullable = false)
+	@JsonIgnore
+	var tenantId: UUID? = null
 
-    @Id
-    @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "user_sub", nullable = false)
-    @JsonProperty
-    @JsonView(Views.Thin::class)
-    var userSub: String? = null
+	@Id
+	@JdbcTypeCode(SqlTypes.VARCHAR)
+	@Column(name = "user_sub", nullable = false)
+	@JsonProperty
+	@JsonView(Views.Thin::class)
+	var userSub: String? = null
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @JoinColumn(
-        name = "tenant_id",
-        insertable = false,
-        updatable = false,
-        foreignKey = ForeignKey(name = "fk_tenant_users__tenant_id")
-    )
-    @JsonIgnore
-    var tenant: Tenant? = null
+	@ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+	@JoinColumn(
+		name = "tenant_id",
+		insertable = false,
+		updatable = false,
+		foreignKey = ForeignKey(name = "fk_tenant_users__tenant_id"),
+	)
+	@JsonIgnore
+	var tenant: Tenant? = null
 
-    @Override
-    override fun toString(): String {
-        return this::class.simpleName + "( tenantId = $tenantId, userSub = $userSub )"
-    }
+	@Override
+	override fun toString(): String {
+		return this::class.simpleName + "( tenantId = $tenantId, userSub = $userSub )"
+	}
 
-    data class PrimaryKey(
-        var tenantId: UUID? = null,
-        var userSub: String? = null,
-    ) : Serializable
+	data class PrimaryKey(
+		var tenantId: UUID? = null,
+		var userSub: String? = null,
+	) : Serializable
 
-    companion object {
-        fun create(tenantId: UUID, userSub: String): TenantUser = TenantUser().apply {
-            this.tenantId = tenantId
-            this.userSub = userSub
-        }
-    }
+	companion object {
+
+		fun create(tenantId: UUID, userSub: String): TenantUser = TenantUser().apply {
+			this.tenantId = tenantId
+			this.userSub = userSub
+		}
+	}
 }

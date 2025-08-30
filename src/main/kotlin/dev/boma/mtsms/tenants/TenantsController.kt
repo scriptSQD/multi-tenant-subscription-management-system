@@ -23,29 +23,28 @@ import java.util.UUID
 @Tag(name = "Tenants", description = "API for Tenant Management")
 class TenantsController @Autowired constructor(val tenantsService: TenantsService) {
 
+	@GetMapping
+	@JsonView(Views.Thin::class)
+	fun getAllTenants(): Set<Tenant> {
+		return tenantsService.getAll()
+	}
 
-    @GetMapping
-    @JsonView(Views.Thin::class)
-    fun getAllTenants(): Set<Tenant> {
-        return tenantsService.getAll()
-    }
+	@GetMapping("/{id}")
+	@JsonView(Views.Extended::class)
+	fun getTenantById(@Validated @PathVariable id: UUID): Tenant {
+		return tenantsService.getById(id)
+	}
 
-    @GetMapping("/{id}")
-    @JsonView(Views.Extended::class)
-    fun getTenantById(@Validated @PathVariable id: UUID): Tenant {
-        return tenantsService.getById(id)
-    }
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
+	@JsonView(Views.Thin::class)
+	fun createTenant(@Validated(OnCreate::class) @RequestBody body: Tenant): Tenant {
+		return tenantsService.create(body)
+	}
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @JsonView(Views.Thin::class)
-    fun createTenant(@Validated(OnCreate::class) @RequestBody body: Tenant): Tenant {
-        return tenantsService.create(body)
-    }
-
-    @PatchMapping("/{id}")
-    @JsonView(Views.Thin::class)
-    fun updateTenant(@Validated @PathVariable id: UUID, @Validated @RequestBody body: Tenant): Tenant {
-        return tenantsService.update(id, body)
-    }
+	@PatchMapping("/{id}")
+	@JsonView(Views.Thin::class)
+	fun updateTenant(@Validated @PathVariable id: UUID, @Validated @RequestBody body: Tenant): Tenant {
+		return tenantsService.update(id, body)
+	}
 }

@@ -11,17 +11,18 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 abstract class DatabaseEnabledTest {
 
-    companion object {
-        @JvmStatic
-        @Container
-        private val postgresContainer = PostgreSQLContainer("postgres:17-alpine")
+	companion object {
 
-        @JvmStatic
-        @DynamicPropertySource
-        fun properties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgresContainer.jdbcUrl }
-            registry.add("spring.datasource.username") { postgresContainer.username }
-            registry.add("spring.datasource.password") { postgresContainer.password }
-        }
-    }
+		@JvmStatic
+		@Container
+		private val postgresContainer = PostgreSQLContainer("postgres:17-alpine")
+
+		@JvmStatic
+		@DynamicPropertySource
+		fun properties(registry: DynamicPropertyRegistry) {
+			registry.add("spring.datasource.url") { postgresContainer.jdbcUrl }
+			registry.add("spring.datasource.username") { postgresContainer.username }
+			registry.add("spring.datasource.password") { postgresContainer.password }
+		}
+	}
 }

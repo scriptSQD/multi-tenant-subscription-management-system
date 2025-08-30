@@ -11,37 +11,38 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 class ValidationExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException::class)
-    fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse> {
-        val errors = e.bindingResult.fieldErrors.associate {
-            it.field to (it.defaultMessage ?: "Invalid value")
-        }
+	@ExceptionHandler(MethodArgumentNotValidException::class)
+	fun handleMethodArgumentNotValidException(e: MethodArgumentNotValidException): ResponseEntity<ApiResponse> {
+		val errors = e.bindingResult.fieldErrors.associate {
+			it.field to (it.defaultMessage
+			             ?: "Invalid value")
+		}
 
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(
-                ApiResponse(
-                    status = HttpStatus.BAD_REQUEST.value(),
-                    message = "Request validation failed",
-                    data = mapOf("errors" to errors)
-                )
-            )
-    }
+		return ResponseEntity
+			.status(HttpStatus.BAD_REQUEST)
+			.body(
+				ApiResponse(
+					status = HttpStatus.BAD_REQUEST.value(),
+					message = "Request validation failed",
+					data = mapOf("errors" to errors),
+				),
+			)
+	}
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
-    fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ApiResponse> {
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(
-                ApiResponse(
-                    status = HttpStatus.BAD_REQUEST.value(),
-                    message = "Request validation failed",
-                    data = mapOf(
-                        "errors" to mapOf(
-                            e.name to "Expected valid value of type ${e.requiredType?.simpleName}"
-                        )
-                    )
-                )
-            )
-    }
+	@ExceptionHandler(MethodArgumentTypeMismatchException::class)
+	fun handleMethodArgumentTypeMismatchException(e: MethodArgumentTypeMismatchException): ResponseEntity<ApiResponse> {
+		return ResponseEntity
+			.status(HttpStatus.BAD_REQUEST)
+			.body(
+				ApiResponse(
+					status = HttpStatus.BAD_REQUEST.value(),
+					message = "Request validation failed",
+					data = mapOf(
+						"errors" to mapOf(
+							e.name to "Expected valid value of type ${e.requiredType?.simpleName}",
+						),
+					),
+				),
+			)
+	}
 }

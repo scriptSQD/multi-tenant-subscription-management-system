@@ -24,46 +24,47 @@ import java.util.UUID
 @Table(name = "tenants")
 @JsonIgnoreProperties("tenantUsers", allowGetters = true)
 class Tenant {
-    @Id
-    @GeneratedUUIDv7
-    @Column(name = "id", nullable = false, updatable = false)
-    @JsonView(Views.Thin::class)
-    @JsonProperty("tenantId")
-    var id: UUID? = null
-        @JsonIgnore
-        set
 
-    @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "name", length = 1000, nullable = false)
-    @JsonProperty
-    @Length(message = "Tenant name shouldn't exceed 1000 characters", max = 1000)
-    @NotBlank(message = "Tenant name is required and shouldn't be blank", groups = [OnCreate::class])
-    @JsonView(Views.Thin::class)
-    var name: String? = null
+	@Id
+	@GeneratedUUIDv7
+	@Column(name = "id", nullable = false, updatable = false)
+	@JsonView(Views.Thin::class)
+	@JsonProperty("tenantId")
+	var id: UUID? = null
+		@JsonIgnore
+		set
 
-    @OneToMany(mappedBy = "tenant", cascade = [CascadeType.ALL], orphanRemoval = true)
-    @JsonProperty
-    @JsonView(Views.Extended::class)
-    var tenantUsers: MutableSet<TenantUser> = mutableSetOf()
+	@JdbcTypeCode(SqlTypes.VARCHAR)
+	@Column(name = "name", length = 1000, nullable = false)
+	@JsonProperty
+	@Length(message = "Tenant name shouldn't exceed 1000 characters", max = 1000)
+	@NotBlank(message = "Tenant name is required and shouldn't be blank", groups = [OnCreate::class])
+	@JsonView(Views.Thin::class)
+	var name: String? = null
 
-    @Override
-    override fun toString(): String {
-        return this::class.simpleName + "( id = $id , name = $name )"
-    }
+	@OneToMany(mappedBy = "tenant", cascade = [CascadeType.ALL], orphanRemoval = true)
+	@JsonProperty
+	@JsonView(Views.Extended::class)
+	var tenantUsers: MutableSet<TenantUser> = mutableSetOf()
 
-    final override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null) return false
-        val oEffectiveClass =
-            if (other is HibernateProxy) other.hibernateLazyInitializer.persistentClass else other.javaClass
-        val thisEffectiveClass =
-            if (this is HibernateProxy) this.hibernateLazyInitializer.persistentClass else this.javaClass
-        if (thisEffectiveClass != oEffectiveClass) return false
-        other as Tenant
+	@Override
+	override fun toString(): String {
+		return this::class.simpleName + "( id = $id , name = $name )"
+	}
 
-        return id != null && id?.equals(other.id) == true
-    }
+	final override fun equals(other: Any?): Boolean {
+		if (this === other) return true
+		if (other == null) return false
+		val oEffectiveClass =
+			if (other is HibernateProxy) other.hibernateLazyInitializer.persistentClass else other.javaClass
+		val thisEffectiveClass =
+			if (this is HibernateProxy) this.hibernateLazyInitializer.persistentClass else this.javaClass
+		if (thisEffectiveClass != oEffectiveClass) return false
+		other as Tenant
 
-    final override fun hashCode(): Int =
-        if (this is HibernateProxy) this.hibernateLazyInitializer.persistentClass.hashCode() else javaClass.hashCode()
+		return id != null && id?.equals(other.id) == true
+	}
+
+	final override fun hashCode(): Int =
+		if (this is HibernateProxy) this.hibernateLazyInitializer.persistentClass.hashCode() else javaClass.hashCode()
 }
