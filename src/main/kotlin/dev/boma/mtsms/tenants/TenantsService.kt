@@ -1,17 +1,14 @@
 package dev.boma.mtsms.tenants
 
-import dev.boma.mtsms.exceptions.business.EntityNotFound
-import dev.boma.mtsms.shared.getJwtFromContext
+import dev.boma.mtsms.core.exceptions.business.EntityNotFound
+import dev.boma.mtsms.core.utils.getJwtFromContext
 import dev.boma.mtsms.tenants.persistence.entities.Tenant
 import dev.boma.mtsms.tenants.persistence.repositories.TenantsRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.UUID
 
 @Service
-class TenantsService @Autowired internal constructor(
-	private val tenantsRepository: TenantsRepository,
-) {
+class TenantsService(private val tenantsRepository: TenantsRepository) {
 
 	fun getAll(): Set<Tenant> {
 		val jwt = getJwtFromContext()
@@ -26,6 +23,9 @@ class TenantsService @Autowired internal constructor(
 	}
 
 	fun create(tenant: Tenant): Tenant {
+		val jwt = getJwtFromContext()
+
+		tenant.addUserBySub(jwt.subject)
 		return tenantsRepository.save(tenant)
 	}
 

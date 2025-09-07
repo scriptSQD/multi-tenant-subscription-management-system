@@ -1,32 +1,39 @@
 package dev.boma.mtsms.e2e
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import dev.boma.mtsms.DatabaseEnabledTest
+import dev.boma.mtsms.e2e.factories.JwtSecurityContextFactory
 import dev.boma.mtsms.tenants.persistence.entities.Tenant
+import dev.boma.mtsms.tenants.persistence.repositories.TenantsRepository
+import java.util.UUID
 import net.datafaker.Faker
 import org.hamcrest.Matchers
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.patch
 import org.springframework.test.web.servlet.post
-import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TenantsTests @Autowired constructor(
 	private val mockMvc: MockMvc,
 	private val objectMapper: ObjectMapper,
-) : DatabaseEnabledTest() {
+	private val tenantsRepository: TenantsRepository,
+) : Base() {
 
 	private val faker = Faker()
 
@@ -47,6 +54,7 @@ class TenantsTests @Autowired constructor(
 				with(
 					jwt().jwt {
 						it.claim("sub", "auth0|user-id")
+						it.claim("scope", "write:tenants")
 					},
 				)
 			}.andExpect {
@@ -72,7 +80,7 @@ class TenantsTests @Autowired constructor(
 				contentType = MediaType.APPLICATION_JSON
 				content = objectMapper.writeValueAsString(payload)
 
-				with(jwt())
+				with(jwt().jwt { it.claim("scope", "write:tenants") })
 			}.andExpect {
 				status { isBadRequest() }
 
@@ -94,47 +102,36 @@ class TenantsTests @Autowired constructor(
 
 	@Nested
 	@DisplayName("Tenant retrieval")
+	@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 	inner class TenantRetrieval {
 
-		private val tenants: MutableList<Pair<String, Tenant>> = mutableListOf()
+		private lateinit var tenants: MutableList<Pair<String, Tenant>>
 
-		@BeforeEach
+		@BeforeAll
 		fun prepareTestTenants() {
 			val tenantOwners = listOf(
 				"auth0|user-sub-1",
 				"auth0|user-sub-2",
 				"auth0|user-sub-3",
-			)
-			val tenantNames = listOf(
-				faker.company().name(),
-				faker.company().name(),
-				faker.company().name(),
-				faker.company().name(),
-				faker.company().name(),
+				"auth0|user-sub-4",
 			)
 
-			tenantNames.forEach { tenantName ->
-				val tenantOwner = tenantOwners.random()
-				mockMvc.post("/tenants") {
-					contentType = MediaType.APPLICATION_JSON
-					content =
-						objectMapper.writeValueAsString(
-							Tenant().apply {
-								name = tenantName
-							},
-						)
-
-					with(
-						jwt().jwt {
-							it.claim("sub", tenantOwner)
-						},
-					)
-				}.andReturn().also {
-					tenants.add(
-						tenantOwner to objectMapper.readValue(it.response.contentAsString, Tenant::class.java),
-					)
+			val tenantOwnerToTenantNameMap = tenantOwners.shuffled().associateWith { faker.company().name() }
+			tenants = tenantOwnerToTenantNameMap.map { (tenantOwner, tenantName) ->
+				val tenant = Tenant().apply {
+					name = tenantName
+					addUserBySub(tenantOwner)
 				}
-			}
+
+				SecurityContextHolder.setContext(JwtSecurityContextFactory.create(tenantOwner))
+
+				tenantOwner to tenantsRepository.save(tenant)
+			}.toMutableList()
+		}
+
+		@AfterAll
+		fun cleanupTestTenants() {
+			tenantsRepository.deleteByIds(tenants.map { t -> t.second.id }.requireNoNulls())
 		}
 
 		@Nested
@@ -155,24 +152,25 @@ class TenantsTests @Autowired constructor(
 					with(
 						jwt().jwt {
 							it.claim("sub", userSub)
+							it.claim("scope", "read:tenants")
 						},
 					)
 				}.andExpect {
 					status { isOk() }
 
-					jsonPath("$.length()") {
-						value(tenants.count { it.first == userSub })
+					jsonPath("@") {
+						exists()
+						isArray()
 					}
 
 					jsonPath("$[*].tenantId") {
-						value(
-							Matchers.containsInAnyOrder(
-								*tenants
-									.filter { it.first == userSub }
-									.map { it.second.id.toString() }
-									.toTypedArray(),
-							),
-						)
+						exists()
+
+						val userRelatedTenantIds = tenants.filter { t -> t.first == userSub }.map { t -> t.second.id.toString() }
+						value(Matchers.hasItems(*userRelatedTenantIds.toTypedArray()))
+
+						val userUnrelatedTenantIds = tenants.filter { t -> t.first != userSub }.map { t -> t.second.id.toString() }
+						value(Matchers.not(Matchers.hasItem(Matchers.`is`(Matchers.`in`(userUnrelatedTenantIds)))))
 					}
 				}
 			}
@@ -199,6 +197,7 @@ class TenantsTests @Autowired constructor(
 					with(
 						jwt().jwt {
 							it.claim("sub", tenantOwnerSub)
+							it.claim("scope", "read:tenants")
 						},
 					)
 				}.andExpect {
@@ -213,6 +212,7 @@ class TenantsTests @Autowired constructor(
 					with(
 						jwt().jwt {
 							it.claim("sub", tenantOwnerSub)
+							it.claim("scope", "read:tenants")
 						},
 					)
 				}.andExpect {
@@ -237,6 +237,7 @@ class TenantsTests @Autowired constructor(
 					with(
 						jwt().jwt {
 							it.claim("sub", "$tenantOwnerSub-broken")
+							it.claim("scope", "read:tenants")
 						},
 					)
 				}.andExpect {
@@ -251,6 +252,7 @@ class TenantsTests @Autowired constructor(
 					with(
 						jwt().jwt {
 							it.claim("sub", tenantOwnerSub)
+							it.claim("scope", "read:tenants")
 						},
 					)
 				}.andExpect {
@@ -269,23 +271,17 @@ class TenantsTests @Autowired constructor(
 
 		@BeforeEach
 		fun prepareTestTenant() {
-			mockMvc.post("/tenants") {
-				contentType = MediaType.APPLICATION_JSON
-				content =
-					objectMapper.writeValueAsString(
-						Tenant().apply {
-							name = "Name before modification"
-						},
-					)
+			tenant = tenantsRepository.save(
+				Tenant().apply {
+					name = "Name before modification"
+					addUserBySub(tenantOwnerSub)
+				},
+			)
+		}
 
-				with(
-					jwt().jwt {
-						it.claim("sub", tenantOwnerSub)
-					},
-				)
-			}.andReturn().also {
-				tenant = objectMapper.readValue(it.response.contentAsString, Tenant::class.java)
-			}
+		@AfterEach
+		fun cleanupTestTenant() {
+			tenantsRepository.deleteByIds(listOf(tenant.id).requireNoNulls())
 		}
 
 		@Test
@@ -303,6 +299,7 @@ class TenantsTests @Autowired constructor(
 				with(
 					jwt().jwt {
 						it.claim("sub", "$tenantOwnerSub-broken")
+						it.claim("scope", "write:tenants")
 					},
 				)
 			}.andExpect {
@@ -325,6 +322,7 @@ class TenantsTests @Autowired constructor(
 				with(
 					jwt().jwt {
 						it.claim("sub", tenantOwnerSub)
+						it.claim("scope", "write:tenants")
 					},
 				)
 			}.andExpect {
@@ -342,6 +340,7 @@ class TenantsTests @Autowired constructor(
 				with(
 					jwt().jwt {
 						it.claim("sub", tenantOwnerSub)
+						it.claim("scope", "write:tenants")
 					},
 				)
 			}.andExpect {
@@ -366,12 +365,37 @@ class TenantsTests @Autowired constructor(
 				with(
 					jwt().jwt {
 						it.claim("sub", tenantOwnerSub)
+						it.claim("scope", "write:tenants")
 					},
 				)
 			}.andExpect {
 				status { isOk() }
 
 				jsonPath("$.name") { value("Modified name") }
+			}
+		}
+
+		@Test
+		@DisplayName("should not modify tenantId even if update contains it")
+		fun immutableTenantId() {
+			mockMvc.patch("/tenants/${tenant.id}") {
+				contentType = MediaType.APPLICATION_JSON
+				content = objectMapper.writeValueAsString(
+					Tenant().apply {
+						id = UUID.fromString("00000000-0000-0000-0000-000000000000")
+					},
+				)
+
+				with(
+					jwt().jwt {
+						it.claim("sub", tenantOwnerSub)
+						it.claim("scope", "write:tenants")
+					},
+				)
+			}.andExpect {
+				status { isOk() }
+
+				jsonPath("$.tenantId") { value(tenant.id.toString()) }
 			}
 		}
 	}

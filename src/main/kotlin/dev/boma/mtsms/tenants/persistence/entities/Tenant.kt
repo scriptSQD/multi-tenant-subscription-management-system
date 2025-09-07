@@ -1,12 +1,11 @@
 package dev.boma.mtsms.tenants.persistence.entities
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonView
-import dev.boma.mtsms.persistence.generators.GeneratedUUIDv7
-import dev.boma.mtsms.serialization.views.Views
-import dev.boma.mtsms.validation.OnCreate
+import dev.boma.mtsms.core.persistence.generators.GeneratedUUIDv7
+import dev.boma.mtsms.core.serialization.views.Views
+import dev.boma.mtsms.core.validation.OnCreate
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -31,8 +30,6 @@ class Tenant {
 	@JsonView(Views.Thin::class)
 	@JsonProperty("tenantId")
 	var id: UUID? = null
-		@JsonIgnore
-		set
 
 	@JdbcTypeCode(SqlTypes.VARCHAR)
 	@Column(name = "name", length = 1000, nullable = false)
@@ -46,6 +43,14 @@ class Tenant {
 	@JsonProperty
 	@JsonView(Views.Extended::class)
 	var tenantUsers: MutableSet<TenantUser> = mutableSetOf()
+
+	fun addUserBySub(sub: String) {
+		val user = TenantUser()
+		user.userSub = sub
+		user.tenant = this
+
+		tenantUsers.add(user)
+	}
 
 	@Override
 	override fun toString(): String {

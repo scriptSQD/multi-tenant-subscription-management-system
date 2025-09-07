@@ -3,8 +3,7 @@ package dev.boma.mtsms.tenants.persistence.entities
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonView
-import dev.boma.mtsms.serialization.views.Views
-import jakarta.persistence.CascadeType
+import dev.boma.mtsms.core.serialization.views.Views
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -13,6 +12,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.IdClass
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.MapsId
 import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
@@ -36,13 +36,9 @@ class TenantUser {
 	@JsonView(Views.Thin::class)
 	var userSub: String? = null
 
-	@ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-	@JoinColumn(
-		name = "tenant_id",
-		insertable = false,
-		updatable = false,
-		foreignKey = ForeignKey(name = "fk_tenant_users__tenant_id"),
-	)
+	@MapsId("tenantId")
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "tenant_id", foreignKey = ForeignKey(name = "fk_tenant_users__tenant_id"))
 	@JsonIgnore
 	var tenant: Tenant? = null
 
